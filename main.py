@@ -1,13 +1,19 @@
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
 from data import projects, skills, data, photographs
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Portfolio API Gateway",
     description="Vercel + FastAPI API Gateway for Portfolio",
     version="1.0.0",
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],     # GET, POST, etc.
+    allow_headers=["*"],     # allow all headers
+)
 
 @app.get("/api/data")
 def get_sample_data():

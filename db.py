@@ -1,32 +1,33 @@
 import psycopg2
-import dotenv
+from dotenv import load_dotenv
 import os
+from typing import Tuple,List
 
-dotenv.load_dotenv()
+load_dotenv(override=True)
 
-required_vars = ["PHOST", "PDATABASE", "PUSER", "PPASSWORD"]
+REQUIRED_VARS = ["PHOST", "PDATABASE", "PUSER", "PPASSWORD"]
 
-for var in required_vars:
-    if os.getenv(var) is None:
-        raise ValueError(f"Missing environment variable: {var}")
+for var in REQUIRED_VARS:
+    if not os.getenv(var):
+        raise RuntimeError(f"Missing environment variable: {var}")
 
-print("All environment variables loaded successfully.")
 
-conn = psycopg2.connect(
-    host=os.getenv("PHOST"),
-    database=os.getenv("PDATABASE"),
-    user=os.getenv("PUSER"),
-    password=os.getenv("PPASSWORD"),
-    sslmode="require"
-)
-
-cur = conn.cursor()
-
-cur.execute("SELECT * FROM photographs;")  
-rows = cur.fetchall()                    
-
-for row in rows:
-    print(row)
-
-cur.close()
-conn.close()
+def get_connection():
+    return psycopg2.connect(
+        host=os.getenv("PHOST"),
+        database=os.getenv("PDATABASE"),
+        user=os.getenv("PUSER"),
+        password=os.getenv("PPASSWORD"),
+        sslmode="require"
+    )
+    
+def load_db() -> List[Tuple]:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM photographs LIMIT 10;")
+            return cur.fetchall()    
+        
+if __name__ == "__main__":
+    rows = load_db()
+    for row in rows:
+        print(row)

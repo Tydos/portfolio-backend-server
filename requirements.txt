@@ -1,5 +1,13 @@
+#backend servers
 fastapi
-psycopg2-binary
+uvicorn
+
+#utils
 python-dotenv
 pydantic
-uvicorn
+
+#cloud storage 
+psycopg2-binary
+
+#image metadata extraction
+pillow

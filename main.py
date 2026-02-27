@@ -71,7 +71,7 @@ def get_photos(
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT id, title, url
+                    SELECT id, title, url, category, description
                     FROM photographs
                     ORDER BY id
                     LIMIT %s OFFSET %s;
@@ -81,7 +81,7 @@ def get_photos(
                 rows = cur.fetchall()
 
         return [
-            {"id": r[0], "title": r[1], "url": r[2]}
+            {"id": r[0], "title": r[1], "url": r[2], "category": r[3], "description": r[4]}
             for r in rows
         ]
 

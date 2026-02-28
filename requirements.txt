@@ -8,6 +8,7 @@ pydantic
 
 #cloud storage 
 psycopg2-binary
+cloudinary
 
 #image metadata extraction
 pillow

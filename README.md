@@ -1,5 +1,7 @@
 
+
 # Portfolio Backend Server
+<img width="1349" height="310" alt="ChatGPT Image Feb 28, 2026 at 02_42_59 PM" src="https://github.com/user-attachments/assets/b38d744f-13c6-41a6-b573-fc1ca8b2c518" />
 
 This backend is built using FastAPI and provides REST APIs to fetch portfolio data from local files and a PostgreSQL cloud database hosted on Databricks and image store on Cloudinary. Pydantic is used for schema validation of API requests.
 

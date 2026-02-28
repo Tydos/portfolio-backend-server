@@ -3,7 +3,7 @@ from data import projects, skills, data, photographs
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from schema.Photo import Photo
-from db import get_connection
+from database import get_connection, upload_photo_to_db, fetch_photographs, view_records
 
 app = FastAPI(
     title="Portfolio Backend Server",
@@ -37,56 +37,35 @@ def get_skills():
 def get_photographs():
     return JSONResponse(photographs)
 
-#CRUD API route for photo blog
-@app.post("/uploadphotos")
+#API route - upload images
+@app.post("/upload")
 def upload_photographs(photo:Photo):
     try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    INSERT INTO photographs (title, url)
-                    VALUES (%s, %s)
-                    RETURNING id;
-                    """,
-                    (photo.title, photo.url)
-                )
-                photo_id = cur.fetchone()[0]
-                conn.commit()
-
+        photo_id = upload_photo_to_db(photo)
         return {
             "message": "Photo uploaded successfully",
             "id": photo_id
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/getphotographs")
+    
+@app.get("/fetch")
 def get_photos(
     limit: int = Query(),
     offset: int = Query()
 ):
     try:
-        with get_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT id, title, url, category, description
-                    FROM photographs
-                    ORDER BY id
-                    LIMIT %s OFFSET %s;
-                    """,
-                    (limit, offset)
-                )
-                rows = cur.fetchall()
-
-        return [
-            {"id": r[0], "title": r[1], "url": r[2], "category": r[3], "description": r[4]}
-            for r in rows
-        ]
-
+        photos = fetch_photographs(limit, offset)
+        return photos
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/health")
+def health():
+    return {
+        "message":"server active",
+        "database": view_records()
+    }
 
 @app.get("/")
 def read_root():

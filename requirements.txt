@@ -12,3 +12,7 @@ cloudinary
 
 #image metadata extraction
 pillow
+
+
+
+#Measure API latencies: brew install wrk 

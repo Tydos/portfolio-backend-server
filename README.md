@@ -45,6 +45,9 @@ This backend is built using FastAPI and provides REST APIs to fetch portfolio da
 | `category` | VARCHAR  | YES  | Photo category (default 'nature', e.g., landscape, nature) |
 | `file_hash`| VARCHAR  | YES  | Optional MD5/SHA1 hash to prevent duplicate uploads |
 
+## Load Testing 
+
+The backend was load-tested using wrk with 8 threads and 100 concurrent connections for 15 seconds per endpoint. Most API routes handled around 6000–6500 requests per second with average latencies near 15 ms and stable tail latency, showing good scalability under load. However, the /fetch endpoint performed significantly worse, managing only about 52 requests per second with an average latency of 1.7 seconds, indicating a likely database or query bottleneck that requires optimization.
 
 ## Future Work
 

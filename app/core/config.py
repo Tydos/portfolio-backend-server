@@ -15,10 +15,7 @@ class Settings:
     API_VERSION = "1.0.0"
 
     # Database Configuration
-    DB_HOST = os.getenv("PHOST")
-    DB_NAME = os.getenv("PDATABASE")
-    DB_USER = os.getenv("PUSER")
-    DB_PASSWORD = os.getenv("PPASSWORD")
+    DATABASE_URL = os.getenv("DATABASE_URL")
 
     # Cloudinary Configuration
     CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
@@ -33,7 +30,7 @@ class Settings:
 
     # File Paths
     IMAGES_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "images")
-    METADATA_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "artifacts", "image_metdata.csv")
+    METADATA_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "artifacts", "image_metadata.csv")
 
 
 settings = Settings()

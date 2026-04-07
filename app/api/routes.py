@@ -4,13 +4,9 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
 
 from app.core.portfolio_data import projects, skills, data, photographs
-from app.database.db import (
-    upload_photo_to_db,
-    view_records,
-    fetch_local_photos,
-    fetch_photographs
-)
+from app.database.db import db
 from app.schemas.photo import Photo
+from app.utils.csv_reader import fetch_local_photos
 
 router = APIRouter()
 
@@ -43,7 +39,7 @@ def get_photographs():
 def upload_photographs(photo: Photo):
     """Upload a new photograph to the database."""
     try:
-        photo_id = upload_photo_to_db(photo)
+        photo_id = db.upload_photo_to_db(photo)
         return {
             "message": "Photo uploaded successfully",
             "id": photo_id
@@ -57,7 +53,11 @@ def get_photos():
     """Fetch photographs from local storage."""
     try:
         photos = fetch_local_photos()
+        if photos is None:
+            raise HTTPException(status_code=500, detail="Failed to fetch local photos")
         return photos
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -66,8 +66,12 @@ def get_photos():
 def get_photos_from_db(limit: int = Query(10, ge=1, le=100), offset: int = Query(0, ge=0)):
     """Fetch paginated photographs from database."""
     try:
-        photos = fetch_photographs(limit, offset)
+        photos = db.fetch_photographs(limit, offset)
+        if photos is None:
+            raise HTTPException(status_code=500, detail="Failed to fetch photos from database")
         return photos
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -75,7 +79,7 @@ def get_photos_from_db(limit: int = Query(10, ge=1, le=100), offset: int = Query
 @router.get("/health")
 def health():
     """Health check endpoint with database status."""
-    records = view_records()
+    records = db.view_records()
     if records is None:
         return {
             "message": "server active",

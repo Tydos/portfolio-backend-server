@@ -3,7 +3,7 @@
 
 # Logs
 *.log
-
+.DS_Store
 # Python
 *.pyc
 *.pyo
@@ -36,7 +36,8 @@ venv.bak/
 # Local data
 /images
 /public
-image_metdata.csv
+/artifacts
+image_metadata.csv
 
 # Testing
 .pytest_cache/

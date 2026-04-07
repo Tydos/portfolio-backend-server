@@ -12,7 +12,10 @@ class Photo(BaseModel):
     url: HttpUrl = Field(..., description="Cloudinary URL of the image")
     width: int = Field(default=1080, gt=0, description="Image width in pixels")
     height: int = Field(default=1920, gt=0, description="Image height in pixels")
-    category: Literal["nature", "landscape", "urban", "portrait", "abstract", "other"] = Field(
+    category: Literal[
+        "nature", "landscape", "urban", "portrait", "abstract", "other",
+        "aero", "architecture", "astrophotography", "minimalism", "street", "travel"
+    ] = Field(
         default="nature",
         description="Photo category"
     )

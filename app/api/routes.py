@@ -16,25 +16,36 @@ def get_data():
     """Get general portfolio data."""
     return JSONResponse(data)
 
-
 @router.get("/api/projects")
 def get_projects():
     """Get portfolio projects."""
     return JSONResponse(projects)
-
 
 @router.get("/api/skills")
 def get_skills():
     """Get skills list."""
     return JSONResponse(skills)
 
-
+#fallback for when the supabase-db cannot be accessed
 @router.get("/api/photographs")
 def get_photographs():
     """Get all photographs."""
     return JSONResponse(photographs)
 
-
+@router.get("/api/images")
+def get_photos_from_db(limit: int = Query(10, ge=1, le=100), offset: int = Query(0, ge=0)):
+    """Fetch paginated photographs from database."""
+    try:
+        photos = db.fetch_photographs(limit, offset)
+        if photos is None:
+            raise HTTPException(status_code=500, detail="Failed to fetch photos from database")
+        return photos
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+#admin
 @router.post("/upload", status_code=201)
 def upload_photographs(photo: Photo):
     """Upload a new photograph to the database."""
@@ -47,34 +58,18 @@ def upload_photographs(photo: Photo):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.get("/fetch")
-def get_photos():
-    """Fetch photographs from local storage."""
-    try:
-        photos = fetch_local_photos()
-        if photos is None:
-            raise HTTPException(status_code=500, detail="Failed to fetch local photos")
-        return photos
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/fetchdb")
-def get_photos_from_db(limit: int = Query(10, ge=1, le=100), offset: int = Query(0, ge=0)):
-    """Fetch paginated photographs from database."""
-    try:
-        photos = db.fetch_photographs(limit, offset)
-        if photos is None:
-            raise HTTPException(status_code=500, detail="Failed to fetch photos from database")
-        return photos
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+# @router.get("/fetch")
+# def get_photos():
+#     """Fetch photographs from local storage."""
+#     try:
+#         photos = fetch_local_photos()
+#         if photos is None:
+#             raise HTTPException(status_code=500, detail="Failed to fetch local photos")
+#         return photos
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/health")
 def health():

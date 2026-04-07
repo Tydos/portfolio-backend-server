@@ -1,18 +1,15 @@
 #backend servers
-fastapi
-uvicorn
+fastapi==0.133.1
+uvicorn[standard]==0.41.0
 
 #utils
-python-dotenv
-pydantic
+python-dotenv==1.2.1
+pydantic==2.12.5
+
+#database
+psycopg2-binary==2.9.11
 
 #cloud storage 
-psycopg2-binary
-cloudinary
-
-#image metadata extraction
-pillow
-
-
+cloudinary==1.44.1
 
 #Measure API latencies: brew install wrk 

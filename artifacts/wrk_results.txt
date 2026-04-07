@@ -1,0 +1,77 @@
+Testing: http://127.0.0.1:8000/api/projects
+Running 15s test @ http://127.0.0.1:8000/api/projects
+  8 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     8.26ms    8.93ms 113.44ms   85.04%
+    Req/Sec     1.86k     1.04k    3.70k    45.58%
+  Latency Distribution
+     50%    2.82ms
+     75%   14.69ms
+     90%   18.45ms
+     99%   34.97ms
+  222178 requests in 15.08s, 821.27MB read
+Requests/sec:  14729.30
+Transfer/sec:     54.45MB
+---------------------------------------
+Testing: http://127.0.0.1:8000/api/skills
+Running 15s test @ http://127.0.0.1:8000/api/skills
+  8 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     7.13ms    6.50ms  99.04ms   93.66%
+    Req/Sec     1.88k   588.19     4.50k    63.33%
+  Latency Distribution
+     50%    6.23ms
+     75%    8.93ms
+     90%   11.52ms
+     99%   33.10ms
+  224867 requests in 15.09s, 107.44MB read
+Requests/sec:  14903.41
+Transfer/sec:      7.12MB
+---------------------------------------
+Testing: http://127.0.0.1:8000/api/photographs
+Running 15s test @ http://127.0.0.1:8000/api/photographs
+  8 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     7.70ms    7.49ms 137.26ms   94.38%
+    Req/Sec     1.79k   362.85     2.37k    74.17%
+  Latency Distribution
+     50%    5.99ms
+     75%    7.64ms
+     90%   10.13ms
+     99%   42.41ms
+  214772 requests in 15.07s, 528.24MB read
+Requests/sec:  14253.99
+Transfer/sec:     35.06MB
+---------------------------------------
+Testing: http://127.0.0.1:8000/api/data
+Running 15s test @ http://127.0.0.1:8000/api/data
+  8 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     7.05ms    5.66ms  73.21ms   93.65%
+    Req/Sec     1.92k   374.85     5.80k    76.13%
+  Latency Distribution
+     50%    5.86ms
+     75%    6.97ms
+     90%    9.02ms
+     99%   38.54ms
+  229868 requests in 15.10s, 170.33MB read
+Requests/sec:  15225.38
+Transfer/sec:     11.28MB
+---------------------------------------
+Testing: http://127.0.0.1:8000/fetch?limit=10&offset=0
+Running 15s test @ http://127.0.0.1:8000/fetch?limit=10&offset=0
+  8 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.41s   253.39ms   2.00s    61.66%
+    Req/Sec     9.99      6.63    40.00     69.78%
+  Latency Distribution
+     50%    1.37s 
+     75%    1.59s 
+     90%    1.80s 
+     99%    1.96s 
+  956 requests in 15.06s, 2.00MB read
+  Socket errors: connect 0, read 0, write 0, timeout 38
+Requests/sec:     63.48
+Transfer/sec:    136.31KB
+---------------------------------------
+Load test complete.

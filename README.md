@@ -22,18 +22,18 @@ This backend is built using FastAPI and provides REST APIs to fetch portfolio da
 ## Image Storage & Upload Workflow
 
 1. Images are stored locally in the `images` folder.  
-2. `upload_images.py` handles:
+2. `upload_image.py` handles:
    - Cloudinary authentication
    - Reading `.jpg` and `.jpeg` images recursively
    - Uploading images to Cloudinary
-   - Generating `image_metadata.csv` containing image metadata (`filename`, `url`, `width`, `height`, `category`)  
-3. The `image_metadata.csv` file can then be used to populate PostgreSQL via the helper function `upload_photo_to_db` in `database.py`.  
-4. FastAPI APIs can then fetch images from the database, supporting pagination and metadata retrieval.
+   - Generating `image_metdata.csv` containing image metadata (`filename`, `url`, `width`, `height`, `category`)  
+3. The `image_metdata.csv` file can then be used to populate PostgreSQL via the helper function `upload_images_from_csv` in `database.py`.  
+4. FastAPI APIs can then fetch images from the database, supporting metadata retrieval.
 
 
 ## Database Schema
 
-**Table: `photos`**
+**Table: `photographs`**
 
 | Column      | Type      | Null | Description                                        |
 |------------|----------|------|----------------------------------------------------|
@@ -43,8 +43,10 @@ This backend is built using FastAPI and provides REST APIs to fetch portfolio da
 | `width`    | INTEGER  | YES  | Image width in pixels (default 1080)             |
 | `height`   | INTEGER  | YES  | Image height in pixels (default 1920)            |
 | `category` | VARCHAR  | YES  | Photo category (default 'nature', e.g., landscape, nature) |
-| `file_hash`| VARCHAR  | YES  | Optional MD5/SHA1 hash to prevent duplicate uploads |
 
+## Load Testing 
+
+The backend was load-tested using wrk with 8 threads and 100 concurrent connections for 15 seconds per endpoint. Most API routes handled around 6000–6500 requests per second with average latencies near 15 ms and stable tail latency, showing good scalability under load. However, the /fetch endpoint performed significantly worse, managing only about 52 requests per second with an average latency of 1.7 seconds, indicating a likely database or query bottleneck that requires optimization.
 
 ## Future Work
 
@@ -54,29 +56,75 @@ This backend is built using FastAPI and provides REST APIs to fetch portfolio da
 * Enable batch uploads for large numbers of images efficiently.
 
 
+## Project Structure
+
+```
+portfolio-backend-server/
+├── main.py                 # Entry point (run the FastAPI app)
+├── requirements.txt        # Python dependencies
+├── README.md              # This file
+├── artifacts/             # Generated artifacts
+│   ├── image_metdata.csv  # Image metadata from uploads
+│   └── wrk_results.txt    # Load testing results
+├── images/                # Local image storage (before Cloudinary upload)
+├── app/
+│   ├── __init__.py
+│   ├── main.py            # FastAPI app factory and configuration
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── routes.py      # API endpoint definitions
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py      # Configuration settings
+│   │   └── portfolio_data.py
+│   ├── database/
+│   │   ├── __init__.py
+│   │   └── db.py          # PostgreSQL connection and queries
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   └── photo.py       # Pydantic schemas for validation
+│   └── utils/
+│       ├── __init__.py
+│       └── image_upload.py # Cloudinary upload utility
+└── tests/
+    ├── __init__.py
+    └── wrk_benchmark.sh   # Load testing script
+```
+
 ## Running the Backend
 
-1. Create a virtual environment, write .env file and install dependencies:
+1. Create a virtual environment, install dependencies, and configure environment:
 
 ```bash
 python -m venv venv
+source venv/bin/activate    # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-2. Start the FastAPI server:
+2. Create a `.env` file with your configuration (Cloudinary, PostgreSQL credentials)
+
+3. Start the FastAPI server:
 
 ```bash
-uvicorn main:app --reload
+python main.py
 ```
 
-3. Bulk upload images and generate metadata
+Or use uvicorn directly:
 
 ```bash
-python upload_image.py
+uvicorn app.main:app --reload
 ```
 
-4. Write metadata to PostgreSQL
+4. Bulk upload images and generate metadata:
 
 ```bash
-python database.py
+python app/utils/image_upload.py
 ```
+
+5. Write metadata to PostgreSQL:
+
+```bash
+python app/database/db.py
+```
+
+The server will be available at `http://localhost:8000` with API docs at `http://localhost:8000/docs`

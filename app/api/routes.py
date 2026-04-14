@@ -6,7 +6,6 @@ from fastapi.responses import JSONResponse
 from app.core.portfolio_data import projects, skills, data, photographs
 from app.database.db import db
 from app.schemas.photo import Photo
-from app.utils.csv_reader import fetch_local_photos
 
 router = APIRouter()
 

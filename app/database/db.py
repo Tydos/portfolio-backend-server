@@ -1,7 +1,6 @@
 """Database connection and operations."""
 
 import logging
-import os
 import csv
 from typing import Optional
 from psycopg2 import pool
@@ -107,7 +106,7 @@ class DatabaseManager:
                                 height=int(row.get('height', 1920)),
                                 category=category_value  # type: ignore
                             )
-                        except ValidationError as ve:
+                        except ValidationError:
                             logging.exception(f"Validation error for row {row}")
                             continue
 

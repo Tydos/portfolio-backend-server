@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(py -m pip install pytest httpx)",
+      "Bash(py -m pip install psycopg2-binary)",
+      "Bash(py -m pip install -r requirements.txt)",
+      "Bash(py -m pytest tests/test_api_get_routes.py -v)",
+      "Bash(py -m pytest tests/test_api.py -v)",
+      "Bash(rm tests/test_api_get_routes.py)",
+      "Bash(py -m ruff check .)",
+      "Bash(py -m pip install ruff)",
+      "Bash(py -m ruff check --fix .)"
+    ]
+  }
+}

@@ -46,7 +46,7 @@ def upload_image(
                     'category': 'nature'
                 })
                 logging.info(f"Uploaded {filename}: {result['url']}")
-            except Exception as e:
+            except Exception:
                 logging.exception(f"Failed to upload {filename}")
 
     # Write existing + new images to CSV, preserving previous entries

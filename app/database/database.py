@@ -1,25 +1,28 @@
 """Database connection and operations."""
 
-import logging
 import csv
+import logging
+from contextlib import contextmanager
 from typing import Optional
+
 from psycopg2 import pool
+from psycopg2.extras import RealDictCursor
 from pydantic import ValidationError
 
 from app.core.config import settings
 from app.schemas.photo import Photo
+
+logger = logging.getLogger("app").getChild(__name__)
 
 
 class DatabaseManager:
     """Manages database connections and photograph operations."""
 
     def __init__(self, db_url: Optional[str] = None):
-        """Initialize database manager with PostgreSQL connection URL."""
         self.db_url = db_url or settings.DATABASE_URL
         self.connection_pool = None
 
     def get_connection_pool(self):
-        """Initialize and return the connection pool."""
         if not self.db_url:
             raise RuntimeError("Missing DATABASE_URL environment variable")
         if self.connection_pool is None:
@@ -31,138 +34,115 @@ class DatabaseManager:
         return self.connection_pool
 
     def close_pool(self):
-        """Close the connection pool."""
         if self.connection_pool is not None:
             self.connection_pool.closeall()
             self.connection_pool = None
-            logging.info("Database connection pool closed")
+            logger.info("Database connection pool closed")
 
     def get_connection(self):
-        """Get a connection from the pool."""
         return self.get_connection_pool().getconn()
 
     def return_connection(self, conn):
-        """Return a connection to the pool."""
         if conn is not None:
             self.get_connection_pool().putconn(conn)
 
-    def create_photographs_table(self):
-        """Create the photographs table if it doesn't exist."""
-        conn = None
+    @contextmanager
+    def _connection(self):
+        conn = self.get_connection()
         try:
-            conn = self.get_connection()
-            with conn.cursor() as cur:
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS photographs (
-                        id SERIAL PRIMARY KEY,
-                        filename VARCHAR(255) NOT NULL,
-                        url VARCHAR(2048) NOT NULL,
-                        category VARCHAR(50) DEFAULT 'nature' NOT NULL,
-                        width INTEGER NOT NULL DEFAULT 1080,
-                        height INTEGER NOT NULL DEFAULT 1920,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    );
-                """)
-            conn.commit()
-            logging.info("Photographs table created successfully")
-        except Exception:
-            if conn:
-                conn.rollback()
-            logging.exception("Failed to create photographs table")
-            raise
+            yield conn
         finally:
             self.return_connection(conn)
 
-    def view_records(self):
-        """View recent records from photographs table."""
-        conn = None
+    def create_photographs_table(self):
+        with self._connection() as conn:
+            try:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        CREATE TABLE IF NOT EXISTS photographs (
+                            id SERIAL PRIMARY KEY,
+                            filename VARCHAR(255) NOT NULL,
+                            url VARCHAR(2048) NOT NULL,
+                            category VARCHAR(50) DEFAULT 'nature' NOT NULL,
+                            width INTEGER NOT NULL DEFAULT 1080,
+                            height INTEGER NOT NULL DEFAULT 1920,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        );
+                    """)
+                conn.commit()
+                logger.info("Photographs table created successfully")
+            except Exception:
+                conn.rollback()
+                logger.exception("Failed to create photographs table")
+                raise
+
+    def ping(self) -> bool:
         try:
-            conn = self.get_connection()
-            with conn.cursor() as cur:
-                cur.execute("SELECT * FROM photographs LIMIT 10")
-                return cur.fetchall()
+            with self._connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT 1")
+            return True
         except Exception:
-            logging.exception("Failed to view records")
-            return None
-        finally:
-            self.return_connection(conn)
+            logger.exception("Database ping failed")
+            return False
 
     def upload_images_from_csv(self, csv_file):
-        """Upload images from CSV file to database."""
-        conn = None
-        try:
-            conn = self.get_connection()
-            with conn.cursor() as cur:
-                with open(csv_file, "r", newline='') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        try:
-                            url_value = row['url']
-                            category_value = row.get('category', "nature").lower()
-                            photo = Photo(
-                                filename=row['filename'],
-                                url=url_value,  # type: ignore
-                                width=int(row.get('width', 1080)),
-                                height=int(row.get('height', 1920)),
-                                category=category_value  # type: ignore
-                            )
-                        except ValidationError:
-                            logging.exception(f"Validation error for row {row}")
-                            continue
+        rows = []
+        with open(csv_file, "r", newline='') as f:
+            for row in csv.DictReader(f):
+                try:
+                    photo = Photo(
+                        filename=row['filename'],
+                        url=row['url'],
+                        width=int(row.get('width', 1080)),
+                        height=int(row.get('height', 1920)),
+                        category=row.get('category', "nature").lower()
+                    )
+                    rows.append((photo.filename.lower(), str(photo.url), photo.category, photo.width, photo.height))
+                except ValidationError:
+                    logger.exception("Validation error for row %s", row)
 
-                        cur.execute(
-                            """
-                            INSERT INTO photographs (filename, url, category, width, height)
-                            VALUES (%s, %s, %s, %s, %s)
-                            RETURNING id;
-                            """,
-                            (photo.filename.lower(), str(photo.url), photo.category, photo.width, photo.height)
-                        )
-                        result = cur.fetchone()
-                        photo_id = result[0] if result is not None else None
-                        logging.info(f"Inserted {photo.filename} with id {photo_id}")
-            conn.commit()
-            return {"message": "All photos uploaded successfully"}
+        if not rows:
+            return {"message": "No valid photos to upload"}
 
-        except Exception:
-            if conn:
+        with self._connection() as conn:
+            try:
+                with conn.cursor() as cur:
+                    cur.executemany(
+                        "INSERT INTO photographs (filename, url, category, width, height) VALUES (%s, %s, %s, %s, %s)",
+                        rows
+                    )
+                conn.commit()
+                logger.info("Inserted %d photos from CSV", len(rows))
+                return {"message": "All photos uploaded successfully"}
+            except Exception:
                 conn.rollback()
-            logging.exception("Failed to upload images from CSV")
-            return None
-        finally:
-            self.return_connection(conn)
+                logger.exception("Failed to upload images from CSV")
+                return None
 
     def upload_photo_to_db(self, photo: Photo) -> int:
-        """Upload a single photo to the database."""
-        conn = None
-        try:
-            conn = self.get_connection()
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    INSERT INTO photographs (filename, url, category, width, height)
-                    VALUES (%s, %s, %s, %s, %s)
-                    RETURNING id;
-                    """,
-                    (photo.filename.lower(), str(photo.url), photo.category, photo.width, photo.height)
-                )
-                result = cur.fetchone()
+        with self._connection() as conn:
+            try:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        INSERT INTO photographs (filename, url, category, width, height)
+                        VALUES (%s, %s, %s, %s, %s)
+                        RETURNING id;
+                        """,
+                        (photo.filename.lower(), str(photo.url), photo.category, photo.width, photo.height)
+                    )
+                    result = cur.fetchone()
                 conn.commit()
                 return result[0] if result else 0
-        except Exception:
-            if conn:
+            except Exception:
                 conn.rollback()
-            logging.exception("Failed to upload photo to database")
-            raise
-        finally:
-            self.return_connection(conn)
+                logger.exception("Failed to upload photo to database")
+                raise
 
     def fetch_photographs(self, limit: int, offset: int):
-        """Fetch photographs from database with pagination."""
-        conn = None
-        try:
-            conn = self.get_connection()
-            with conn.cursor() as cur:
+        with self._connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute(
                     """
                     SELECT id, filename, url, category, width, height
@@ -172,21 +152,7 @@ class DatabaseManager:
                     """,
                     (limit, offset)
                 )
-                return [
-                    {
-                        "id": r[0],
-                        "filename": r[1],
-                        "url": r[2],
-                        "category": r[3],
-                        "width": r[4],
-                        "height": r[5]
-                    }
-                    for r in cur.fetchall()
-                ]
-        except Exception:
-            logging.exception("Failed to fetch photographs from database")
-            return None
-        finally:
-            self.return_connection(conn)
+                return [dict(r) for r in cur.fetchall()]
+
 
 db = DatabaseManager()

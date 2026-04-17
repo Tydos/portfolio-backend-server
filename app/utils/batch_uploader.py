@@ -4,7 +4,7 @@ import logging
 import os
 import csv
 
-from app.utils.cloudinary_uploader import CloudinaryUploader
+from app.utils.cloud_storage import CloudinaryUploader
 
 logging.basicConfig(level=logging.DEBUG)
 

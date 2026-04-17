@@ -85,7 +85,7 @@ portfolio-backend-server/
 │   │   └── photo.py       # Pydantic schemas for validation
 │   └── utils/
 │       ├── __init__.py
-│       └── image_upload.py # Cloudinary upload utility
+│       └── batch_uploader.py # Cloudinary upload utility
 └── tests/
     ├── __init__.py
     └── wrk_benchmark.sh   # Load testing script
@@ -118,7 +118,7 @@ uvicorn app.main:app --reload
 4. Bulk upload images and generate metadata:
 
 ```bash
-python app/utils/image_upload.py
+python app/utils/batch_uploader.py
 ```
 
 5. Write metadata to PostgreSQL:

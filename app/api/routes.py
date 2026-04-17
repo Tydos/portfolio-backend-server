@@ -4,20 +4,17 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app import logger as _pkg_logger
 from app.utils.auth import verify_admin_key
-from app.core.portfolio_data import data, projects, skills, photographs
+from app.core.portfolio_data import projects, photographs
 from app.database.database import db
 from app.schemas.photo import Photo
 
 router = APIRouter()
 logger = _pkg_logger.getChild(__name__)
 
-_PORTFOLIO_RESPONSE = {**data, "skills": skills, "projects": projects}
 
-
-@router.get("/api/portfolio")
-def get_portfolio():
-    return _PORTFOLIO_RESPONSE
-
+@router.get("/api/projects")
+def get_projects():
+    return {"projects": projects}
 
 @router.get("/api/images")
 def get_images(limit: int = Query(10, ge=1, le=100), offset: int = Query(0, ge=0)):

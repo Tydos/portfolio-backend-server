@@ -1,37 +1,4 @@
-"""Portfolio data - skills, projects, and photographs."""
-
-data = {
-    "name": "Prasad",
-    "role": "Full Stack Engineer & AI Developer",
-    "about": {
-        "story": "I am a developer who works at the intersection of logic and creativity. I focus on creating experiences, not just software, by combining strong problem solving with thoughtful design. Whether I am building websites, training machine learning models, or taking photographs, I aim to create work that is both purposeful and engaging.",
-        "stats": []
-    },
-    "bio": "I'm a grad student at UW–Madison passionate about machine learning and building smart systems. I also code websites and build Android apps, and work with APIs and databases. Off-duty, I read, play, and take photos."
-}
-
-skills = {
-    1: {
-        "title": "Frontend",
-        "items": ["React", "Next.js", "Tailwind CSS", "TypeScript"],
-        "color": "indigo"
-    },
-    2: {
-        "title": "Backend",
-        "items": ["Node.js", "Python", "FastAPI", "PostgreSQL", "Redis"],
-        "color": "emerald"
-    },
-    3: {
-        "title": "AI/ML",
-        "items": ["PyTorch", "HuggingFace", "LangChain", "Vector DBs"],
-        "color": "rose"
-    },
-    4: {
-        "title": "DevOps",
-        "items": ["Docker", "AWS", "Git", "CI/CD"],
-        "color": "amber"
-    }
-}
+"""Portfolio data - projects and photographs."""
 
 projects = {
     1: {

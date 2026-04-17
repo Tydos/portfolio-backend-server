@@ -6,8 +6,6 @@ import csv
 
 from app.utils.cloud_storage import CloudinaryUploader
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 def upload_image(
     image_folder: str,

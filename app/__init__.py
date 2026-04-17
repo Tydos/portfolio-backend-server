@@ -2,15 +2,25 @@
 
 import logging
 import os
-
-_log_dir = os.path.join(os.path.dirname(__file__), "logs")
-os.makedirs(_log_dir, exist_ok=True)
-
-_handler = logging.FileHandler(os.path.join(_log_dir, "app.log"))
-_handler.setFormatter(logging.Formatter("%(asctime)s %(name)-30s %(levelname)s %(message)s"))
+import sys
 
 logger = logging.getLogger("app")
-if not logger.handlers:
-    logger.addHandler(_handler)
-    logger.setLevel(logging.INFO)
-    logger.propagate = False
+
+
+def configure_logging() -> None:
+    """Emit logs to stdout so platforms like Vercel can collect runtime logs."""
+    root = logging.getLogger()
+    level_name = os.environ.get("LOG_LEVEL", "INFO").upper()
+    root.setLevel(getattr(logging, level_name, logging.INFO))
+
+    if root.handlers:
+        return
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s")
+    )
+    root.addHandler(handler)
+
+
+configure_logging()

@@ -6,6 +6,7 @@ httpx
 pytest
 #utils
 python-dotenv==1.2.1
+python-multipart
 pydantic==2.12.5
 
 #database

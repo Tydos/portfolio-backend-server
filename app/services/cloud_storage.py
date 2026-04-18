@@ -5,7 +5,7 @@ import logging
 import cloudinary
 import cloudinary.uploader
 
-from app.core.config import settings
+from app.schemas.config import settings
 
 # Cloudinary SDK config
 cloudinary.config(

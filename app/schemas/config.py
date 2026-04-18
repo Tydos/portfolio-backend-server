@@ -31,9 +31,4 @@ class Settings:
     # Admin Authentication
     ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 
-    # File Paths
-    IMAGES_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "images")
-    METADATA_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "artifacts", "image_metadata.csv")
-
-
 settings = Settings()

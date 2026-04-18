@@ -9,7 +9,12 @@
       "Bash(rm tests/test_api_get_routes.py)",
       "Bash(py -m ruff check .)",
       "Bash(py -m pip install ruff)",
-      "Bash(py -m ruff check --fix .)"
+      "Bash(py -m ruff check --fix .)",
+      "Bash(find *)",
+      "Bash(xargs grep *)",
+      "Bash(python *)",
+      "Bash(.venv/Scripts/pip install *)",
+      "Bash(.venv/Scripts/python *)"
     ]
   }
 }

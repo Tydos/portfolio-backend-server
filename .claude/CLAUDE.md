@@ -27,27 +27,27 @@ Copy `.env.example` to `.env` and populate:
 
 **Entry point:** `main.py` — creates the FastAPI app, attaches CORS middleware, includes the router, and manages the database pool lifecycle via `asynccontextmanager`.
 
-**All routes** live in a single file: `app/api/routes.py`. Add new endpoints there using the existing `router` instance.
+**All routes** live in a single file: `app/routes.py`. Add new endpoints there using the existing `router` instance.
 
 **Two data sources for portfolio content:**
-1. **Static Python dicts** in `app/core/portfolio_data.py` — `data`, `skills`, `projects`, `photographs`. The `/api/data`, `/api/projects`, `/api/skills`, and `/api/photographs` routes serve these directly as JSON with no DB call.
-2. **PostgreSQL** (`photographs` table) — accessed via `db` (a `DatabaseManager` singleton in `app/database/database.py`). The `/api/images` route queries this for paginated photo metadata.
+1. **Static Python dicts** in `app/portfolio_data.py` — `projects`, `photographs`. The `/api/projects` route serves these directly as JSON with no DB call.
+2. **PostgreSQL** (`photographs` table) — accessed via `db` (a `DatabaseManager` singleton in `app/database.py`). The `/api/images` route queries this for paginated photo metadata.
 
-**Database layer:** `DatabaseManager` in `app/database/database.py` uses `psycopg2.pool.ThreadedConnectionPool` (min=2, max=10). Always call `return_connection()` in a `finally` block. The pool is closed on app shutdown via the lifespan handler.
+**Database layer:** `DatabaseManager` in `app/database.py` uses `psycopg2.pool.ThreadedConnectionPool` (min=2, max=10). Always call `return_connection()` in a `finally` block. The pool is closed on app shutdown via the lifespan handler.
 
-**Auth:** `app/utils/auth.py` — `verify_admin_key` FastAPI dependency that validates the `X-API-Key` header against `settings.ADMIN_API_KEY`.
+**Auth:** `app/auth.py` — `verify_admin_key` FastAPI dependency that validates the `X-API-Key` header against `settings.ADMIN_API_KEY`.
 
-**Schemas:** `app/schemas/photo.py` defines the `Photo` Pydantic model used for both the `POST /upload` request body and CSV-to-DB ingestion. The `category` field is a strict `Literal` enum.
+**Schemas:** `app/photo.py` defines the `Photo` Pydantic model. The `category` field is a strict `Literal` enum.
 
-**Logging:** `app/__init__.py` configures a module-level `logger` (plain `logging.Logger`) writing to `app/logs/app.log`. Child loggers in other modules use `logger.getChild(__name__)`.
+**Logging:** `app/__init__.py` configures a module-level `logger` (plain `logging.Logger`) writing to stdout. Child loggers in other modules use `logger.getChild(__name__)`.
 
-**Image workflow:** Images are uploaded to Cloudinary via `app/utils/cloud_storage.py`, which generates `artifacts/image_metadata.csv`. That CSV is then ingested into PostgreSQL using `db.upload_images_from_csv()` (run `python app/database/database.py` directly to trigger this).
+**Image workflow:** `POST /api/upload` accepts a `.jpg`/`.jpeg` file, uploads it to Cloudinary via `app/cloud_storage.py`, then persists metadata to PostgreSQL via `app/photo_upload.py` (PhotoUploadService). Duplicate filenames are skipped.
 
 ## Load Testing
 
 ```bash
 # Requires wrk (brew install wrk on macOS)
-bash app/tests/wrk_benchmark.sh
+bash app/wrk_benchmark.sh
 ```
 
-Results are written to `app/artifacts/wrk_results.txt`. Static routes sustain ~14,000–15,000 req/s; the DB-backed `/api/images` route is the bottleneck (~63 req/s).
+Results are written to `app/wrk_results.txt`. Static routes sustain ~14,000–15,000 req/s; the DB-backed `/api/images` route is the bottleneck (~63 req/s).

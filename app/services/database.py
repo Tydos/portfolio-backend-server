@@ -1,15 +1,12 @@
 """Database connection and operations."""
 
-import csv
 import logging
 from contextlib import contextmanager
 from typing import Optional
 
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
-from pydantic import ValidationError
-
-from app.core.config import settings
+from app.schemas.config import settings
 from app.schemas.photo import Photo
 
 logger = logging.getLogger("app").getChild(__name__)
@@ -86,39 +83,14 @@ class DatabaseManager:
             logger.exception("Database ping failed")
             return False
 
-    def upload_images_from_csv(self, csv_file):
-        rows = []
-        with open(csv_file, "r", newline='') as f:
-            for row in csv.DictReader(f):
-                try:
-                    photo = Photo(
-                        filename=row['filename'],
-                        url=row['url'],
-                        width=int(row.get('width', 1080)),
-                        height=int(row.get('height', 1920)),
-                        category=row.get('category', "nature").lower()
-                    )
-                    rows.append((photo.filename.lower(), str(photo.url), photo.category, photo.width, photo.height))
-                except ValidationError:
-                    logger.exception("Validation error for row %s", row)
+    def _photo_to_tuple(self, photo: Photo) -> tuple:
+        return (photo.filename.lower(), str(photo.url), photo.category, photo.width, photo.height)
 
-        if not rows:
-            return {"message": "No valid photos to upload"}
-
+    def filename_exists(self, filename: str) -> bool:
         with self._connection() as conn:
-            try:
-                with conn.cursor() as cur:
-                    cur.executemany(
-                        "INSERT INTO photographs (filename, url, category, width, height) VALUES (%s, %s, %s, %s, %s)",
-                        rows
-                    )
-                conn.commit()
-                logger.info("Inserted %d photos from CSV", len(rows))
-                return {"message": "All photos uploaded successfully"}
-            except Exception:
-                conn.rollback()
-                logger.exception("Failed to upload images from CSV")
-                return None
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1 FROM photographs WHERE filename = %s LIMIT 1", (filename,))
+                return cur.fetchone() is not None
 
     def upload_photo_to_db(self, photo: Photo) -> int:
         with self._connection() as conn:
@@ -130,7 +102,7 @@ class DatabaseManager:
                         VALUES (%s, %s, %s, %s, %s)
                         RETURNING id;
                         """,
-                        (photo.filename.lower(), str(photo.url), photo.category, photo.width, photo.height)
+                        self._photo_to_tuple(photo)
                     )
                     result = cur.fetchone()
                 conn.commit()

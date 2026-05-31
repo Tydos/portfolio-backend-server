@@ -3,7 +3,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 class Settings:
@@ -21,6 +21,11 @@ class Settings:
     CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
     CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
     CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
+
+    # Supabase Configuration
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+    SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "images")
 
     # CORS Configuration
     CORS_ORIGINS = ["*"]

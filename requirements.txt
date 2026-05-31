@@ -12,7 +12,9 @@ pydantic==2.12.5
 #database
 psycopg2-binary==2.9.11
 
-#cloud storage 
+#cloud storage
 cloudinary==1.44.1
+supabase
+Pillow
 
 #Measure API latencies: brew install wrk 
